@@ -19,7 +19,7 @@ jobs:
         channel: 'stable'
 
     - name: Create missing folders
-      run: flutter create .
+      run: flutter create --project-name hisab_book .
 
     - name: Install dependencies
       run: flutter pub get
