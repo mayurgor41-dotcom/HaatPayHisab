@@ -15,7 +15,7 @@ class DBHelper {
     final path = p.join(await getDatabasesPath(), 'hisab_book.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2, // Version badhakar 2 kar diya
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: (db, v) async {
         await db.execute('''
@@ -42,6 +42,8 @@ class DBHelper {
             amount REAL NOT NULL,
             note TEXT,
             datetime INTEGER NOT NULL,
+            payment_mode INTEGER DEFAULT 0,
+            image_path TEXT,
             FOREIGN KEY(party_id) REFERENCES parties(id) ON DELETE CASCADE
           )''');
         final seed = [
@@ -52,6 +54,13 @@ class DBHelper {
         ];
         for (final c in seed) {
           await db.insert('categories', c);
+        }
+      },
+      // Purani app wale users ke liye (agar unke phone mein data pehle se hai)
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE transactions ADD COLUMN payment_mode INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE transactions ADD COLUMN image_path TEXT');
         }
       },
     );
@@ -95,10 +104,14 @@ class DBHelper {
   Future<int> addTxn(Txn t) async =>
       (await db).insert('transactions', t.toMap()..remove('id'));
 
+  // NAYA: Edit/Update ke liye
+  Future<int> updateTxn(Txn t) async =>
+      (await db).update('transactions', t.toMap(), where: 'id=?', whereArgs: [t.id]);
+
   Future<void> deleteTxn(int id) async =>
       (await db).delete('transactions', where: 'id=?', whereArgs: [id]);
 
-  /// Balance per party = opening + gave - got
+  // Balance per party
   Future<Map<int, double>> balanceMap() async {
     final rows = await (await db).rawQuery('''
       SELECT p.id AS pid, p.opening_balance AS ob,
