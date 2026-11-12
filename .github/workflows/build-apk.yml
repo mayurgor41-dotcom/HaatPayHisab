@@ -18,8 +18,11 @@ jobs:
         flutter-version: '3.19.0'
         channel: 'stable'
 
-    - name: Create missing folders
-      run: flutter create --project-name hisab_book .
+    - name: Generate Android files safely
+      run: |
+        flutter create --project-name hisab_book temp_project
+        cp -r temp_project/android .
+        rm -rf temp_project
 
     - name: Install dependencies
       run: flutter pub get
