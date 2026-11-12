@@ -54,6 +54,12 @@ class AppProvider extends ChangeNotifier {
     await refreshParties();
   }
 
+  // NAYA: Edit/Update Entry ke liye
+  Future<void> updateTxn(Txn t) async {
+    await DBHelper.instance.updateTxn(t);
+    await refreshParties();
+  }
+
   Future<void> deleteTxn(int id) async {
     await DBHelper.instance.deleteTxn(id);
     await refreshParties();
